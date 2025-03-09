@@ -128,6 +128,11 @@ void CmdHandler::handleloop()
 		// 完成输入,然后抛出任务给其他函数或者线程完成.
 		std::cout << "->>";
 		std::getline(std::cin, input);
+		if (input.empty()) // 检查是否为空行
+		{
+			continue; // 跳过空行
+		}
+
 		lowerinput = toLowerCase(input);
 
 		std::istringstream strin(lowerinput);
