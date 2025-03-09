@@ -1,26 +1,26 @@
 cmake_minimum_required(VERSION 3.10)
 
-# ��Ŀ���ƺ�ʹ�õ�C++��׼
+# 项目名称和使用的C++标准
 project(MyRedis VERSION 1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# ����ͷ�ļ�Ŀ¼
+# 包含头文件目录
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# ����Դ�ļ�Ŀ¼
+# 添加源文件目录
 file(GLOB SOURCES
 	"main.cpp"
 	"src/*.cpp"
 )
 
-# ���ӿ�ִ���ļ�
+# 添加可执行文件
 add_executable(MyRedis ${SOURCES})
 
-# �������Ŀ¼
+# 设置输出目录
 set_target_properties(MyRedis PROPERTIES
-	RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
+	RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
 
-# ����е���������Ҫ���ӣ���������������
+# 如果有第三方库需要链接，可以在这里添加
 # target_link_libraries(MyRedis your_library_name)
