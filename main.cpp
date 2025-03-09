@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
-#include <thread> //³Ö¾Ã»¯Ê±ºòÊ¹ÓÃÏß³Ì
+#include <thread> //æŒä¹…åŒ–æ—¶å€™ä½¿ç”¨çº¿ç¨‹
 #include <mutex>
 #include <chrono>
 #include <condition_variable>
@@ -12,15 +12,15 @@
 #include "./include/tools.h"
 #include "./include/CmdHandler.h"
 
-// Ïß³ÌÍ¬²½»áÓÃµ½µÄ¶«Î÷
+// çº¿ç¨‹åŒæ­¥ä¼šç”¨åˆ°çš„ä¸œè¥¿
 std::mutex mtx;
 std::condition_variable cond;
 std::unordered_map<std::string, std::string> data_map;
 
-// ÃüÁî¼¯ºÏ,ºóĞø»áÖğ½¥Ôö¼Ó.
+// å‘½ä»¤é›†åˆ,åç»­ä¼šé€æ¸å¢åŠ .
 std::unordered_set<std::string> cmd_set;
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	CmdHandler cmd_handler;
 	std::cout << "		Wellcome to MyRedis.If you are first time use MyRedis, you can enter <help> ." << std::endl;

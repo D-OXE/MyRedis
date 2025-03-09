@@ -6,21 +6,83 @@
 
 CmdHandler::CmdHandler()
 {
-	// ¹¹Ôì
-	this->SupportedCmd = {"set", "get", "save", "exit", "del", "scan", "help"};
+	// æ„é€ 
+	this->SupportedCmd = {
+		"set",
+		"get",
+		"save",
+		"del",
+		"scan",
+		"help",
+
+		"quit", // é€€å‡ºå‘½ä»¤
+		"q",
+		"exit",
+		"e",
+	};
 }
 
 CmdHandler::~CmdHandler()
 {
-	// Îö¹¹
+	// ææ„
 }
 
-void CmdHandler::handle_cmd(const std::string &cmd)
+void CmdHandler::scan_var()
 {
+	// çº¿ç¨‹åŒæ­¥
+	for (auto it = DataStringKV.begin(); it != DataStringKV.end(); ++it)
+	{
+		std::cout << it->first << " " << it->second << std::endl;
+	}
+}
+
+void CmdHandler::set_key()
+{
+	// æ·»åŠ çº¿ç¨‹åŒæ­¥
+	if (cmd_list.size() != 3)
+	{
+		std::cout << "Error cmd input : plase enter as:\n	set Key Value" << std::endl;
+		return;
+	}
+	DataStringKV[cmd_list[1]] = cmd_list[2];
+}
+
+void CmdHandler::get_key()
+{
+	// çº¿ç¨‹
+	if (cmd_list.size() != 2)
+	{
+		std::cout << "Error cmd input : plase enter as:\n	get Key" << std::endl;
+		return;
+	}
+	auto it = DataStringKV.find(cmd_list[1]);
+	if (it == DataStringKV.end())
+	{
+		std::cout << "There is no corresponding key, please check your input key" << std::endl;
+		return;
+	}
+	else
+	{
+		std::cout << it->second << std::endl;
+	}
+}
+
+void CmdHandler::handle_cmd()
+{
+	/*
+	æœ¬å‡½æ•°çš„ä¼˜åŒ–æ–¹æ³•:
+1. ä½¿ç”¨å‘½ä»¤æ˜ å°„è¡¨ï¼ˆCommand Mapï¼‰
+å°†å‘½ä»¤ä¸å…¶å¯¹åº”çš„å¤„ç†å‡½æ•°ç»‘å®šåˆ°ä¸€ä¸ªæ˜ å°„è¡¨ä¸­ï¼ˆå¦‚ std::unordered_mapï¼‰ï¼Œé€šè¿‡æŸ¥æ‰¾æ˜ å°„è¡¨ç›´æ¥è°ƒç”¨å¯¹åº”çš„å¤„ç†å‡½æ•°ã€‚
+
+	*/
+	// çº¿ç¨‹åŒæ­¥
+	std::string cmd = cmd_list[0];
+
 	auto it = this->SupportedCmd.find(cmd);
+
 	if (it == this->SupportedCmd.end())
 	{
-		// Ã»ÓĞÕâ¸öÃüÁî,²éÕÒÊ§°Ü
+		// æ²¡æœ‰è¿™ä¸ªå‘½ä»¤,æŸ¥æ‰¾å¤±è´¥
 		std::cout << "Error cmd input :" << cmd << ", input again." << std::endl;
 		return;
 	}
@@ -28,58 +90,63 @@ void CmdHandler::handle_cmd(const std::string &cmd)
 	if (*it == "help")
 	{
 		std::cout << "test help" << std::endl;
-	}else if (*it == "exit" || *it == "e" || *it == "quit" || *it == "q")
+	}
+	else if (*it == "exit" || *it == "e" || *it == "quit" || *it == "q")
 	{
+		Running = false;
 		std::cout << " thank you for your using. Bye " << std::endl;
-		// ÕâÀï¿ÉÒÔ×·¼ÓÏß³ÌÍ¬²½Óï¾ä,½«flagĞŞ¸ÄÎª²»Ö´ĞĞ eventloop,µÈ´ıËùÓĞÏß³ÌÖ´ĞĞÍê±Ï,ÔÙÍË³ö³ÌĞò
+		// è¿™é‡Œå¯ä»¥è¿½åŠ çº¿ç¨‹åŒæ­¥è¯­å¥,å°†flagä¿®æ”¹ä¸ºä¸æ‰§è¡Œ eventloop,ç­‰å¾…æ‰€æœ‰çº¿ç¨‹æ‰§è¡Œå®Œæ¯•,å†é€€å‡ºç¨‹åº
 	}
 	else if (*it == "set")
 	{
-		// string µÄsetÃüÁî
-		this->set_key(); // ¿ÉÒÔÌí¼ÓÏß³ÌÍ¬²½·½ÃæµÄ¶«Î÷.Cmd_Cache
-		std::cout << "test set" << std::endl;
+		this->set_key();
 	}
 	else if (*it == "scan")
 	{
-		std::cout << "test scan" << std::endl;
+		this->scan_var();
 	}
 	else if (*it == "save")
 	{
 		std::cout << "test save" << std::endl;
-		// Æô¶¯±£´æÏß³Ì ,±£´æAOFºÍRDBÎÄ¼ş.ÕâÀïÊÇ²»ÊÇ¿ÉÒÔÏ¸·Ö?
+		// å¯åŠ¨ä¿å­˜çº¿ç¨‹ ,ä¿å­˜AOFå’ŒRDBæ–‡ä»¶.è¿™é‡Œæ˜¯ä¸æ˜¯å¯ä»¥ç»†åˆ†?
 	}
 	else if (*it == "get")
 	{
-		std::cout << "test get" << std::endl;
+		this->get_key();
 	}
 }
-// ÊÂ¼şÑ­»·,½«ÊäÈë¸ñÊ½»¯,½»ÓÉ handle_cmd´¦Àí
+// äº‹ä»¶å¾ªç¯,å°†è¾“å…¥æ ¼å¼åŒ–,äº¤ç”± handle_cmdå¤„ç†
 void CmdHandler::handleloop()
 {
 	std::string input, lowerinput;
 
-	std::vector<std::string> cmd_list;
 	int cmd_num = 0;
 
 	// int type;
-	while (true) // ÕâÀïĞèÒªĞŞ¸ÄÎªÍ¬²½flagÅĞ¶ÏÑ­»·ÊÇ·ñ¼ÌĞøÖ´ĞĞ
+	while (Running) // è¿™é‡Œéœ€è¦ä¿®æ”¹ä¸ºåŒæ­¥flagåˆ¤æ–­å¾ªç¯æ˜¯å¦ç»§ç»­æ‰§è¡Œ
 	{
-		// Íê³ÉÊäÈë,È»ºóÅ×³öÈÎÎñ¸øÆäËûº¯Êı»òÕßÏß³ÌÍê³É.
+		// å®Œæˆè¾“å…¥,ç„¶åæŠ›å‡ºä»»åŠ¡ç»™å…¶ä»–å‡½æ•°æˆ–è€…çº¿ç¨‹å®Œæˆ.
 		std::cout << "->>";
 		std::getline(std::cin, input);
 		lowerinput = toLowerCase(input);
 
-		std::istringstream strin(input);
-		// std::istringstream strsave(input); // ÓÃÓÚ»º´æÃüÁîµÄ×Ö·û´®Á÷ ,ÕâÀïºóĞø¿ÉÒÔÓÅ»¯
-
+		std::istringstream strin(lowerinput);
+		// std::istringstream strsave(input); // ç”¨äºç¼“å­˜å‘½ä»¤çš„å­—ç¬¦ä¸²æµ ,è¿™é‡Œåç»­å¯ä»¥ä¼˜åŒ–
 
 		while (strin)
 		{
-			strin >> cmd_list[cmd_num++];
+			std::string temp;
+			strin >> temp;
+			if (temp != "")
+			{
+				cmd_list.push_back(temp);
+				cmd_num++;
+			}
 		}
 
-		// ÅĞ¶ÏÊäÈëÃüÁî,²¢¼ìÑéºÏ·¨ĞÔ,½«ÊäÈëÃüÁî´ò°ü·ÅÔÚCmd_CacheÖĞ,Æô¶¯»º´æÏß³ÌÈÎÎñ
+		// åˆ¤æ–­è¾“å…¥å‘½ä»¤,å¹¶æ£€éªŒåˆæ³•æ€§,å°†è¾“å…¥å‘½ä»¤æ‰“åŒ…æ”¾åœ¨Cmd_Cacheä¸­,å¯åŠ¨ç¼“å­˜çº¿ç¨‹ä»»åŠ¡
 
-		this->handle_cmd(cmd_list[0]);
+		this->handle_cmd();
+		cmd_list.clear();
 	}
 }

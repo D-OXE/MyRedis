@@ -3,39 +3,46 @@
 #include <vector>
 #include <thread>
 #include <unordered_set>
+#include <unordered_map>
 
-//´¦Àícmd µÄÒ»¸öÀà
+// å¤„ç†cmd çš„ä¸€ä¸ªç±»
 class CmdHandler
 {
 public:
-	//ÃüÁîÊäÈëÑ­»·,Ã¿´ÎÊäÈëÃüÁî,»á¼ÇÂ¼ÓĞĞ§ÃüÁî²ÎÊıµ½Cmd_CacheÖĞ
+	// å‘½ä»¤è¾“å…¥å¾ªç¯,æ¯æ¬¡è¾“å…¥å‘½ä»¤,ä¼šè®°å½•æœ‰æ•ˆå‘½ä»¤å‚æ•°åˆ°Cmd_Cacheä¸­
 	void handleloop();
 
-	//¹¹ÔìºÍÎö¹¹ÖĞÒª¼ÓÔØÎÄ¼ş»ò¹Ø±ÕRDB/AOFÎÄ¼ş
+	// æ„é€ å’Œææ„ä¸­è¦åŠ è½½æ–‡ä»¶æˆ–å…³é—­RDB/AOFæ–‡ä»¶
 	CmdHandler();
 	~CmdHandler();
 
 private:
-	void handle_cmd(const std::string &cmd);
+	bool Running = true;
+
+	void handle_cmd();
 	void set_key();
-	bool get_key(const std::string &key, std::string &value);
+	void get_key();
 	bool del_key(const std::string &key);
 
-	bool scan_var();
+	void scan_var();
 
-	void SaveRDB();		// ½«Êı¾İ±£´æµ½RDBÎÄ¼şÖĞ,ÎÄ¼şÂ·¾¶ÉÔºóÅäÖÃ
-	void LoadRDB();		// ¶ÁÈ¡RDBÎÄ¼ş,ÎÄ¼şÂ·¾¶ÉÔºóÅäÖÃ
+	void SaveRDB(); // å°†æ•°æ®ä¿å­˜åˆ°RDBæ–‡ä»¶ä¸­,æ–‡ä»¶è·¯å¾„ç¨åé…ç½®
+	void LoadRDB(); // è¯»å–RDBæ–‡ä»¶,æ–‡ä»¶è·¯å¾„ç¨åé…ç½®
 
-	void SaveAOF();		// ½«Êı¾İ±£´æµ½AOFÎÄ¼şÖĞ,ÎÄ¼şÂ·¾¶ÉÔºóÅäÖÃ
-	void LoadAOF();		// ¶ÁÈ¡AOFÎÄ¼ş,ÎÄ¼şÂ·¾¶ÉÔºóÅäÖÃ
+	void SaveAOF(); // å°†æ•°æ®ä¿å­˜åˆ°AOFæ–‡ä»¶ä¸­,æ–‡ä»¶è·¯å¾„ç¨åé…ç½®
+	void LoadAOF(); // è¯»å–AOFæ–‡ä»¶,æ–‡ä»¶è·¯å¾„ç¨åé…ç½®
 
-	//ÊäÈëµÄÃüÁî»º´æ,ÓÃÓÚ×·¼Óµ½AOFÎÄ¼şÖĞ
+	// è¾“å…¥çš„å‘½ä»¤ç¼“å­˜,ç”¨äºè¿½åŠ åˆ°AOFæ–‡ä»¶ä¸­
 	std::vector<std::vector<std::string>> Cmd_Cache;
 	std::vector<std::vector<std::string>> Cmd_Cache_Save;
 
-	// ×¨ÓÃÓÚ»º´æÃüÁîµÄÏß³Ì
+	// ä¸“ç”¨äºç¼“å­˜å‘½ä»¤çš„çº¿ç¨‹
 	std::thread save_thread;
-	std::unordered_set<std::string> SupportedCmd; // Ö§³ÖµÄÃüÁî
+	std::unordered_set<std::string> SupportedCmd; // æ”¯æŒçš„å‘½ä»¤
 
-	
+	// ä¸€æ¬¡è¾“å…¥çš„å‘½ä»¤
+	std::vector<std::string> cmd_list;
+
+	// ç”¨äºå­˜å‚¨é”®å€¼å¯¹çš„ç»“æ„
+	std::unordered_map<std::string, std::string> DataStringKV;
 };
