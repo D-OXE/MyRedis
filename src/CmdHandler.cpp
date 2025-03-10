@@ -67,6 +67,24 @@ void CmdHandler::get_key()
 	}
 }
 
+void CmdHandler::del_key()
+{
+	// 线程
+	if (cmd_list.size() != 2)
+	{
+		std::cout << "Error cmd input : plase enter as:\n	del Key" << std::endl;
+		return;
+	}
+	auto it = DataStringKV.find(cmd_list[1]);
+	if (it == DataStringKV.end())
+	{
+		std::cout << "There is no corresponding key, please check your input key" <<std::endl;
+		return;
+	}else{
+		DataStringKV.erase(it);
+	}
+}
+
 void CmdHandler::handle_cmd()
 {
 	/*
@@ -113,6 +131,8 @@ void CmdHandler::handle_cmd()
 	else if (*it == "get")
 	{
 		this->get_key();
+	}else if(*it == "del"){
+		this->del_key();
 	}
 }
 // 事件循环,将输入格式化,交由 handle_cmd处理

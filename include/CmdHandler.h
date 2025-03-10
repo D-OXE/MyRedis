@@ -22,7 +22,7 @@ private:
 	void handle_cmd();
 	void set_key();
 	void get_key();
-	bool del_key(const std::string &key);
+	void del_key();
 
 	void scan_var();
 
