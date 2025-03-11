@@ -3,6 +3,8 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <chrono>
+#include <thread>
 
 CmdHandler::CmdHandler()
 {
@@ -12,76 +14,30 @@ CmdHandler::CmdHandler()
 		"get",
 		"save",
 		"del",
-		"scan",
 		"help",
+		"scan",	
+
+		"expire",	//设置过期时间
+		"ttl",		//查看过期时间
+		"persist",	//取消过期时间
 
 		"quit", // 退出命令
 		"q",
 		"exit",
 		"e",
 	};
+
+	// 启动删除过期时间键的线程
+	this->delete_timeout = std::move(std::thread(&CmdHandler::check_ttl_key,this));
 }
 
 CmdHandler::~CmdHandler()
 {
 	// 析构
-}
-
-void CmdHandler::scan_var()
-{
-	// 线程同步
-	for (auto it = DataStringKV.begin(); it != DataStringKV.end(); ++it)
+	Running = false; // 通知线程退出循环
+	if (delete_timeout.joinable())
 	{
-		std::cout << it->first << " " << it->second << std::endl;
-	}
-}
-
-void CmdHandler::set_key()
-{
-	// 添加线程同步
-	if (cmd_list.size() != 3)
-	{
-		std::cout << "Error cmd input : plase enter as:\n	set Key Value" << std::endl;
-		return;
-	}
-	DataStringKV[cmd_list[1]] = cmd_list[2];
-}
-
-void CmdHandler::get_key()
-{
-	// 线程
-	if (cmd_list.size() != 2)
-	{
-		std::cout << "Error cmd input : plase enter as:\n	get Key" << std::endl;
-		return;
-	}
-	auto it = DataStringKV.find(cmd_list[1]);
-	if (it == DataStringKV.end())
-	{
-		std::cout << "There is no corresponding key, please check your input key" << std::endl;
-		return;
-	}
-	else
-	{
-		std::cout << it->second << std::endl;
-	}
-}
-
-void CmdHandler::del_key()
-{
-	// 线程
-	if (cmd_list.size() != 2)
-	{
-		std::cout << "Error cmd input : plase enter as:\n	del Key" << std::endl;
-		return;
-	}
-	auto it = DataStringKV.find(cmd_list[1]);
-	if (it == DataStringKV.end())
-	{
-		std::cout << "There is no corresponding key, please check your input key" <<std::endl;
-		return;
-	}else{
-		DataStringKV.erase(it);
+		delete_timeout.join(); // 等待线程结束
 	}
 }
 
@@ -89,12 +45,13 @@ void CmdHandler::handle_cmd()
 {
 	/*
 	本函数的优化方法:
-1. 使用命令映射表（Command Map）
-将命令与其对应的处理函数绑定到一个映射表中（如 std::unordered_map），通过查找映射表直接调用对应的处理函数。
+	1. 使用命令映射表（Command Map）
+	将命令与其对应的处理函数绑定到一个映射表中（如 std::unordered_map），通过查找映射表直接调用对应的处理函数。
 
 	*/
 	// 线程同步
-	std::string cmd = cmd_list[0];
+	std::string cmd = cmd_list[0];		//此时已经被转换为小写
+	time_t now = std::time(nullptr);
 
 	auto it = this->SupportedCmd.find(cmd);
 
@@ -133,6 +90,12 @@ void CmdHandler::handle_cmd()
 		this->get_key();
 	}else if(*it == "del"){
 		this->del_key();
+	}else if(*it == "expire"){
+		this->expire(1); // TODO string 类型设置为 1如何判断输入的类型?
+	}else if(*it == "ttl"){
+		this->ttl();
+	}else if(*it == "persist"){
+		this->persist();
 	}
 }
 // 事件循环,将输入格式化,交由 handle_cmd处理
@@ -153,11 +116,11 @@ void CmdHandler::handleloop()
 			continue; // 跳过空行
 		}
 
-		lowerinput = toLowerCase(input);
-
-		std::istringstream strin(lowerinput);
+		
+		std::istringstream strin(input); 
+		
 		// std::istringstream strsave(input); // 用于缓存命令的字符串流 ,这里后续可以优化
-
+		
 		while (strin)
 		{
 			std::string temp;
@@ -168,9 +131,10 @@ void CmdHandler::handleloop()
 				cmd_num++;
 			}
 		}
-
 		// 判断输入命令,并检验合法性,将输入命令打包放在Cmd_Cache中,启动缓存线程任务
+		lowerinput = toLowerCase(cmd_list[0]);	//TODO:仅将输入命令转换为小写,键值对不转换.后续遇到组合命令,可能需要转换.
 
+		// 单次循环处理单次输入的命令
 		this->handle_cmd();
 		cmd_list.clear();
 	}
