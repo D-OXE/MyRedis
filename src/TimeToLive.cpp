@@ -3,6 +3,9 @@
 #include <string>
 #include <chrono>
 #include <algorithm>
+#include <mutex>
+#include <memory>
+#include <condition_variable>
 
 void CmdHandler::expire(int type)
 {
@@ -20,15 +23,19 @@ void CmdHandler::expire(int type)
 		std::cout << "Error cmd input : plase enter as:\n	expire Key <unsigned int>" << std::endl;
 		return;
 	}
-	auto it = DataStringKV.find(cmd_list[1]);
-	if (it == DataStringKV.end())
 	{
-		std::cout << "Error cmd input : Key not found" << std::endl;
-	}
-	else
-	{
-		// 设置Unix时间戳
-		it->second.first = now + static_cast<time_t>(std::stoi(cmd_list[2]));
+		// 线程同步
+		std::unique_lock<std::mutex> lock(mtx);
+		auto it = DataStringKV.find(cmd_list[1]);
+		if (it == DataStringKV.end())
+		{
+			std::cout << "Error cmd input : Key not found" << std::endl;
+		}
+		else
+		{
+			// 设置Unix时间戳,可以增加线程同步限制
+			it->second.first = now + static_cast<time_t>(std::stoi(cmd_list[2]));
+		}
 	}
 }
 void CmdHandler::ttl()
@@ -41,6 +48,7 @@ void CmdHandler::ttl()
 	}
 	else
 	{
+		std::unique_lock<std::mutex> lock(mtx);
 		auto it = DataStringKV.find(cmd_list[1]);
 		if (it == DataStringKV.end())
 		{
@@ -59,6 +67,7 @@ void CmdHandler::persist()
 	}
 	else
 	{
+		std::unique_lock<std::mutex> lock(mtx);
 		time_t max_time = std::numeric_limits<time_t>::max();
 		auto it = DataStringKV.find(cmd_list[1]);
 		if (it == DataStringKV.end())
@@ -75,20 +84,20 @@ void CmdHandler::check_ttl_key()
 {
 	while (Running)
 	{ // 由 Running 标志控制循环
-		std::this_thread::sleep_for(std::chrono::seconds(5));
-
-		std::lock_guard<std::mutex> lock(mtx); // 确保线程安全
+		std::this_thread::sleep_for(std::chrono::seconds(30));
 		auto now = std::time(nullptr);
-
-		for (auto it = DataStringKV.begin(); it != DataStringKV.end();)
 		{
-			if (it->second.first < now)
+			std::unique_lock<std::mutex> lock(mtx); // 确保线程安全
+			for (auto it = DataStringKV.begin(); it != DataStringKV.end();)
 			{
-				it = DataStringKV.erase(it); // erase 返回下一个有效迭代器
-			}
-			else
-			{
-				++it;
+				if (it->second.first < now)
+				{
+					it = DataStringKV.erase(it); // erase 返回下一个有效迭代器
+				}
+				else
+				{
+					++it;
+				}
 			}
 		}
 	}

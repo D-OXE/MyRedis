@@ -68,9 +68,13 @@ void CmdHandler::handle_cmd()
 	}
 	else if (*it == "exit" || *it == "e" || *it == "quit" || *it == "q")
 	{
-		Running = false;
-		std::cout << " thank you for your using. Bye " << std::endl;
-		// 这里可以追加线程同步语句,将flag修改为不执行 eventloop,等待所有线程执行完毕,再退出程序
+		{
+
+			std::unique_lock<std::mutex> lock(mtx);
+			Running = false;
+			std::cout << " thank you for your using. Bye " << std::endl;
+			// 这里可以追加线程同步语句,将flag修改为不执行 eventloop,等待所有线程执行完毕,再退出程序
+		}
 	}
 	else if (*it == "set")
 	{
@@ -82,7 +86,7 @@ void CmdHandler::handle_cmd()
 	}
 	else if (*it == "save")
 	{
-		std::cout << "test save" << std::endl;
+		this->SaveRDB();
 		// 启动保存线程 ,保存AOF和RDB文件.这里是不是可以细分?
 	}
 	else if (*it == "get")
@@ -116,7 +120,6 @@ void CmdHandler::handleloop()
 			continue; // 跳过空行
 		}
 
-		
 		std::istringstream strin(input); 
 		
 		// std::istringstream strsave(input); // 用于缓存命令的字符串流 ,这里后续可以优化
