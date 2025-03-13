@@ -17,10 +17,16 @@ void CmdHandler::SaveRDB()
 	}
 	{
 		std::unique_lock<std::mutex> lock(mtx);
+		if (!Running)
+		{
+			// 如果 Running 为 false，直接退出函数
+			rdb.close();
+			return;
+		}
 		for (auto &i : DataStringKV)
 		{
 			rdb << i.first << " " << i.second.second << std::endl;
 		}
+		rdb.close();
 	}
-	rdb.close();
 }

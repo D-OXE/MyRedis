@@ -6,7 +6,7 @@
 #include <chrono>
 #include <thread>
 
-CmdHandler::CmdHandler()
+CmdHandler::CmdHandler():Running(true)
 {
 	// 构造
 	this->SupportedCmd = {
@@ -15,11 +15,11 @@ CmdHandler::CmdHandler()
 		"save",
 		"del",
 		"help",
-		"scan",	
+		"scan",
 
-		"expire",	//设置过期时间
-		"ttl",		//查看过期时间
-		"persist",	//取消过期时间
+		"expire",  // 设置过期时间
+		"ttl",	   // 查看过期时间
+		"persist", // 取消过期时间
 
 		"quit", // 退出命令
 		"q",
@@ -28,17 +28,22 @@ CmdHandler::CmdHandler()
 	};
 
 	// 启动删除过期时间键的线程
-	this->delete_timeout = std::move(std::thread(&CmdHandler::check_ttl_key,this));
+	this->delete_timeout = std::move(std::thread(&CmdHandler::check_ttl_key, this));
+
 }
 
 CmdHandler::~CmdHandler()
 {
 	// 析构
-	Running = false; // 通知线程退出循环
+	{
+		std::unique_lock<std::mutex> lock(mtx);
+		Running = false; // 通知线程退出循环
+	}
 	if (delete_timeout.joinable())
 	{
 		delete_timeout.join(); // 等待线程结束
 	}
+
 }
 
 void CmdHandler::handle_cmd()
@@ -50,7 +55,7 @@ void CmdHandler::handle_cmd()
 
 	*/
 	// 线程同步
-	std::string cmd = cmd_list[0];		//此时已经被转换为小写
+	std::string cmd = cmd_list[0]; // 此时已经被转换为小写
 	time_t now = std::time(nullptr);
 
 	auto it = this->SupportedCmd.find(cmd);
@@ -68,13 +73,8 @@ void CmdHandler::handle_cmd()
 	}
 	else if (*it == "exit" || *it == "e" || *it == "quit" || *it == "q")
 	{
-		{
-
-			std::unique_lock<std::mutex> lock(mtx);
-			Running = false;
-			std::cout << " thank you for your using. Bye " << std::endl;
-			// 这里可以追加线程同步语句,将flag修改为不执行 eventloop,等待所有线程执行完毕,再退出程序
-		}
+		// 修改为专门的退出函数,妥善处理线程安全问题.......
+		this->quit();
 	}
 	else if (*it == "set")
 	{
@@ -92,13 +92,21 @@ void CmdHandler::handle_cmd()
 	else if (*it == "get")
 	{
 		this->get_key();
-	}else if(*it == "del"){
+	}
+	else if (*it == "del")
+	{
 		this->del_key();
-	}else if(*it == "expire"){
+	}
+	else if (*it == "expire")
+	{
 		this->expire(1); // TODO string 类型设置为 1如何判断输入的类型?
-	}else if(*it == "ttl"){
+	}
+	else if (*it == "ttl")
+	{
 		this->ttl();
-	}else if(*it == "persist"){
+	}
+	else if (*it == "persist")
+	{
 		this->persist();
 	}
 }
@@ -120,11 +128,11 @@ void CmdHandler::handleloop()
 			continue; // 跳过空行
 		}
 
-		std::istringstream strin(input); 
-		
+		std::istringstream strin(input);
+
 		// std::istringstream strsave(input); // 用于缓存命令的字符串流 ,这里后续可以优化
-		
-		while (strin)
+
+		while (strin) // 拆分命令,存入缓存命令列表中
 		{
 			std::string temp;
 			strin >> temp;
@@ -134,8 +142,9 @@ void CmdHandler::handleloop()
 				cmd_num++;
 			}
 		}
+
 		// 判断输入命令,并检验合法性,将输入命令打包放在Cmd_Cache中,启动缓存线程任务
-		lowerinput = toLowerCase(cmd_list[0]);	//TODO:仅将输入命令转换为小写,键值对不转换.后续遇到组合命令,可能需要转换.
+		lowerinput = toLowerCase(cmd_list[0]); // TODO:仅将输入命令转换为小写,键值对不转换.后续遇到组合命令,可能需要转换.
 
 		// 单次循环处理单次输入的命令
 		this->handle_cmd();

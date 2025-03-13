@@ -82,12 +82,16 @@ void CmdHandler::persist()
 // 删除过期的键,定期删除机制,而不是惰性删除.单独一个线程.每10秒执行一次这个任务,构造中启动
 void CmdHandler::check_ttl_key()
 {
-	while (Running)
+	while (true)
 	{ // 由 Running 标志控制循环
-		std::this_thread::sleep_for(std::chrono::seconds(30));
+		std::this_thread::sleep_for(std::chrono::seconds(10));
 		auto now = std::time(nullptr);
 		{
-			std::unique_lock<std::mutex> lock(mtx); // 确保线程安全
+			std::unique_lock<std::mutex> lock(mtx);
+			if (!Running)
+			{
+				break;
+			}
 			for (auto it = DataStringKV.begin(); it != DataStringKV.end();)
 			{
 				if (it->second.first < now)

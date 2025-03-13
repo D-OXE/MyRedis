@@ -40,22 +40,18 @@ private:
 	void SaveAOF(); // 将数据保存到AOF文件中,文件路径稍后配置
 	void LoadAOF(); // 读取AOF文件,文件路径稍后配置
 
-	std::atomic<bool> Running = true;
+	bool Running;
 	std::mutex mtx;
-	std::condition_variable cmdlist_use;	  // 用于线程同步
-	std::condition_variable cmdlist_autosave; // 自动保存AOF的条件变量
 
-	// 输入的命令缓存,用于追加到AOF文件中
+		// 输入的命令缓存,用于追加到AOF文件中
 	std::vector<std::vector<std::string>> Cmd_Cache;
 	std::vector<std::vector<std::string>> Cmd_Cache_Save;
 
-	// 专用于缓存命令的线程
-	std::thread save_thread;
 	std::unordered_set<std::string> SupportedCmd; // 支持的命令
-
+	
 	// 一次输入的命令
 	std::vector<std::string> cmd_list;
-
+	
 	// 用于存储键值对的结构
 	std::unordered_map<std::string, std::pair<time_t, std::string>> DataStringKV;
 	std::thread delete_timeout;
