@@ -86,8 +86,7 @@ void CmdHandler::handle_cmd()
 	}
 	else if (*it == "save")
 	{
-		this->SaveRDB();
-		// 启动保存线程 ,保存AOF和RDB文件.这里是不是可以细分?
+		this->SaveRDB();	//没有必要单起线程,直接顺序执行即可
 	}
 	else if (*it == "get")
 	{

@@ -9,6 +9,7 @@
 const char *RDBPATH = "./data/rdb.dat";
 void CmdHandler::SaveRDB()
 {
+	// 对于save命令.后续可以增加set ,或者map命令头在第一行,用于读取数据时,将对应数据放进对应的结构体中.
 	std::ofstream rdb(RDBPATH, std::ios::app);
 	if (!rdb.is_open())
 	{
@@ -25,7 +26,8 @@ void CmdHandler::SaveRDB()
 		}
 		for (auto &i : DataStringKV)
 		{
-			rdb << i.first << " " << i.second.second << std::endl;
+			//set 命令用于普通键值对
+			rdb << "set " << i.first << " " << i.second.second << std::endl;
 		}
 		rdb.close();
 	}
